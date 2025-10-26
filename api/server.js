@@ -4,7 +4,12 @@ const cors = require('cors');
 const mysql = require('mysql2/promise');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type",
+}));
+
 app.use(express.json());
 
 const PORT = process.env.PORT || 4000;
@@ -18,7 +23,14 @@ async function initDb() {
   const dbName = process.env.DB_NAME || 'crud_app';
 
   // Ensure database exists: create a temporary connection without database
-  const tempPool = mysql.createPool({ host, port, user, password, waitForConnections: true, connectionLimit: 1 });
+  const tempPool = mysql.createPool({
+    host,
+    port,
+    user,
+    password,
+    waitForConnections: true,
+    connectionLimit: 1
+  });
   await tempPool.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;`);
   await tempPool.end();
 
@@ -51,13 +63,21 @@ app.get('/students', async (req, res) => {
     res.json(rows);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'Failed to fetch students' });
+    res.status(500).json({
+      error: 'Failed to fetch students'
+    });
   }
 });
 
 app.post('/students', async (req, res) => {
-  const { name, nim, major } = req.body;
-  if (!name || !name.trim()) return res.status(400).json({ error: 'Name is required' });
+  const {
+    name,
+    nim,
+    major
+  } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({
+    error: 'Name is required'
+  });
   try {
     const [result] = await pool.query('INSERT INTO students (name, nim, major) VALUES (?, ?, ?)', [name.trim(), nim || null, major || null]);
     const id = result.insertId;
@@ -65,20 +85,28 @@ app.post('/students', async (req, res) => {
     res.status(201).json(rows[0]);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'Failed to create student' });
+    res.status(500).json({
+      error: 'Failed to create student'
+    });
   }
 });
 
 app.put('/students/:id', async (req, res) => {
   const id = Number(req.params.id);
-  const { name, nim, major } = req.body;
+  const {
+    name,
+    nim,
+    major
+  } = req.body;
   try {
     await pool.query('UPDATE students SET name = ?, nim = ?, major = ? WHERE id = ?', [name, nim || null, major || null, id]);
     const [rows] = await pool.query('SELECT id, name, nim, major FROM students WHERE id = ?', [id]);
     res.json(rows[0]);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'Failed to update student' });
+    res.status(500).json({
+      error: 'Failed to update student'
+    });
   }
 });
 
@@ -89,7 +117,9 @@ app.delete('/students/:id', async (req, res) => {
     res.status(204).end();
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: 'Failed to delete student' });
+    res.status(500).json({
+      error: 'Failed to delete student'
+    });
   }
 });
 
